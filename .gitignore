@@ -1,0 +1,22 @@
+# Виртуальное окружение
+venv/
+env/
+.venv
+
+# Python кэш
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Базы данных
+*.db
+
+# Переменные окружения (с паролями)
+.env
+.env.local
+
+# Логи
+*.log
+logfile
