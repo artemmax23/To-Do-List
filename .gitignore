@@ -20,3 +20,9 @@ __pycache__/
 # Логи
 *.log
 logfile
+
+# Alembic
+migration/__pycache__/
+migration/*.pyc
+migration/versions/__pycache__/
+*.db

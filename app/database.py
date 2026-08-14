@@ -13,3 +13,7 @@ class Base(AsyncAttrs, DeclarativeBase):
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"
+        
+async def init_db():
+    async with engine.begin() as conn:
+        await con.run_sync(Base.metadata.create_all)

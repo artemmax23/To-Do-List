@@ -4,15 +4,15 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from app.database import Base
 
 class Tag(Base):
-    __tablename__ = "Tags"
+    __tablename__ = "tags"
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True, index=True)
     
-    tasks = reltionship("Task", back_populates="tag_rel")
+    tasks = relationship("Task", back_populates="tag_rel")
     
 class Task(Base):
-    __tablenme__="Tasks"
+    __tablename__="tasks"
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
@@ -20,6 +20,6 @@ class Task(Base):
     state = Column(Boolean, default=False)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
     
-    tag_id = Column(Integer, ForeignKey("Tags.id"), nullable=True, index=True)
+    tag_id = Column(Integer, ForeignKey("tags.id"), nullable=True, index=True)
     
-    tag_rel = relationship("Tag", back_populates="t asks")
+    tag_rel = relationship("Tag", back_populates="tasks")
