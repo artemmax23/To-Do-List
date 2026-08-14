@@ -15,23 +15,21 @@ class TagResponse(TagBase):
         
 class TaskBase(BaseModel):
     title: str
-    text: Optional[str] = None
-    state: Optional[bool] = False
-    tag_id: Optional[int] = None
+    text: str | None = None
+    state: bool = False
+    tag_id: int | None = None
     
 class TaskCreate(TaskBase):
     pass
     
 class TaskUpdate(TaskBase):
-    title: Optional[str] = None
-    text: Optional[str] = None
-    state: Optional[bool] = None
-    tag_id: Optional[int] = None
+    pass
     
 class TaskResponse(TaskBase):
     id: int
     created_date: datetime
-    tag: Optional[TagResponse] = None
+    updated_at: datetime | None
+    tag_id: int | None = None
     
     class Config:
         from_attributes = True
