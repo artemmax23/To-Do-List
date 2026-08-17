@@ -27,7 +27,13 @@ class TaskCreate(TaskBase):
     
 class TaskUpdate(TaskBase):
     pass
-    
+
+class TaskPatch(BaseModel):
+    title: str | None
+    description: str | None = None
+    is_completed: bool | None = False
+    tag_id: int | None = None        
+            
 class TaskResponse(TaskBase):
     id: int
     created_at: datetime

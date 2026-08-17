@@ -104,9 +104,10 @@ async def update_task(
 )
 async def patch_task(
         task_id: int,
-        task_data: schemas.TaskUpdate,
+        task_data: schemas.TaskPatch,
         db: AsyncSession = Depends(get_db)
 ):
+    existing_task = await crud.get_task(db, task_id)
     
     if not existing_task:
         raise HTTPException(
@@ -123,7 +124,7 @@ async def patch_task(
                     detail=f"Tag with id {task_data.tag_id} not found"
             )
             
-    return await crud.update_task(db, task_id, task_data)
+    return await crud.update_task(db, task_id, task_data.model_dump(exclude_unset=True))
     
 @router.delete(
         "/{task_id}",

@@ -37,7 +37,8 @@ async def update(db: AsyncSession, model, obj_id: int, obj_data):
     update_data = obj_data if isinstance(obj_data, dict) else obj_data.model_dump(exclude_unset=True)
     
     for key, value in update_data.items():
-        setattr(db_obj, key, value)
+        if value is not None:
+            setattr(db_obj, key, value)
         
     await db.commit()
     await db.refresh(db_obj)
