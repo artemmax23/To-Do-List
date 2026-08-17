@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.routers import tasks
+from app.routers import tasks, tags
 
 app = FastAPI(
         title="Task Manager API",
@@ -21,6 +21,7 @@ app.add_middleware(
 )
 
 app.include_router(tasks.router)
+app.include_router(tags.router)
 
 @app.get("/", tags=["Health Check"])
 async def root():

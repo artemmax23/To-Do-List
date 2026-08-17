@@ -4,7 +4,7 @@ from app import models, schemas
  
 async def get_all(db: AsyncSession, model, skip: int = 0, limit: int = 100):
      result = await db.execute(
-             select(model).offset(skip).limit(limit).all()
+             select(model).offset(skip).limit(limit)
      )
      
      return result.scalars().all()
@@ -103,10 +103,10 @@ async def get_tag(db: AsyncSession, tag_id: int):
     
 async def get_tag_by_name(db: AsyncSession, name: str):
     result = await db.execute(
-            select(models.Tag).filter(models.Tag.name == name)
+            select(models.Tag).where(models.Tag.name.ilike(f"%{name}%"))
     )
     
-    return result.scalar_one_or_none()
+    return result.scalars().all()
     
 async def create_tag(db: AsyncSession, tag: schemas.TagCreate):
     existing_tag = await get_tag_by_name(db, tag.name)
