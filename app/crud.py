@@ -1,26 +1,35 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, schemas
  
- def get_all(db: Session, model, skip: int = 0, limit: int = 100):
-     return db.query(model).offset(skip).limit(limit).all()
+async def get_all(db: AsyncSession, model, skip: int = 0, limit: int = 100):
+     result = await db.execute(
+             select(model).offset(skip).limit(limit).all()
+     )
      
-def get_by_id(db: Session, model, obj_id: int):
-    return db.query(model).filter(model.id == obj_id).first()
+     return result.scalars().all()
+     
+async def get_by_id(db: AsyncSession, model, obj_id: int):
+    result = await db.execute(
+        select(model).where(model.id == obj_id)
+    )
     
-def create(db: Session, model, obj_data):
+    return result.scalar_one_or_none()
+    
+async def create(db: AsyncSession, model, obj_data):
     if isinstance(obj_data, dict):
         db_obj = model(**obj_data)
     else:
         db_obj = model(**obj_data.model_dump())
     
     db.add(db_obj)
-    db.commit()
-    db.refresh()
+    await db.commit()
+    await db.refresh(db_obj)
     
     return db_obj
     
-def update(db: Session, model, obj_id: int, obj_data):
-    db_oobj = get_by_id(db, model, obj_id)
+async def update(db: AsyncSession, model, obj_id: int, obj_data):
+    db_obj = await get_by_id(db, model, obj_id)
     
     if not db_obj:
         return None
@@ -30,70 +39,84 @@ def update(db: Session, model, obj_id: int, obj_data):
     for key, value in update_data.items():
         setattr(db_obj, key, value)
         
-    db.commit()
-    db.refresh(db_obj)
+    await db.commit()
+    await db.refresh(db_obj)
     
     return db_obj
     
-def delete(db: Session, model, obj_id: int) -> bool:
-    db_obj = get_by_id(db, model, obj_id)
+async def delete(db: AsyncSession, model, obj_id: int) -> bool:
+    db_obj = await get_by_id(db, model, obj_id)
     
     if not db_obj:
         return False
         
-    db.delete(db_obj)
-    db.commit()
+    await db.delete(db_obj)
+    await db.commit()
     
     return True
     
-def get_tasks(
-        db: Session,
+async def get_tasks(
+        db: AsyncSession,
         skip: int = 0,
         limit: int = 100,
         is_completed: bool | None = None,
-        tag_id: int | None = None
-):
-    query = db.query(models.Task)
+        tag_id: int | None = None,
+        search: str | None = None
+) -> list[models.Task]:
+    query = select(models.Task)
     
     if is_completed is not None:
-        query = query.filter(models.Task.is_completed == is_completed) 
+        query = query.where(models.Task.is_completed == is_completed) 
     
     if tag_id is not None:
-        query = query.filter(models.Task.tag_id == tag_id)
+        query = query.where(models.Task.tag_id == tag_id)
         
-    return query.order_by(models.Task.id.desc()).offset(skip).limit(limit).all()
+    if search:
+            query = query.where(
+                    (models.Task.title.ilike(f"%{search}%")) |
+                    (models.Task.description.ilike(f"%{search}%"))
+            )    
     
-def create_task(db: Session, task: schemas.TaskCreate):
-    return create(db, models.Task, task)
+    query = query.offset(skip).limit(limit).order_by(models.Task.id.desc())
+    result = await db.execute(query)            
+                                        
+    return result.scalars().all()
     
-def get_task(db: Session, task_id: int):
-    return get_by_id(db, models.Task, task_id)
+async def create_task(db: AsyncSession, task: schemas.TaskCreate):
+    return await create(db, models.Task, task)
     
-def update_task(db: Session, task_id: int, task_update: schemas.TaskUpdate):
-    return update(db, models.Task, task_id, task_update)
+async def get_task(db: AsyncSession, task_id: int):
+    return await get_by_id(db, models.Task, task_id)
     
-def delete_task(db: Session, task_id: int):
-    return delete(db, models.Task, task_id)
+async def update_task(db: AsyncSession, task_id: int, task_update: schemas.TaskUpdate):
+    return await update(db, models.Task, task_id, task_update)
     
-def get_tags(db: Session, skip: int = 0, limit: int = 100):
-    return get_all(db, models.Tag, skip, limit)
+async def delete_task(db: AsyncSession, task_id: int):
+    return await delete(db, models.Task, task_id)
     
-def get_tag(db: Session, tag_id: int):
-    return get_by_id(db, models.Tag, tag_id)
+async def get_tags(db: AsyncSession, skip: int = 0, limit: int = 100):
+    return await get_all(db, models.Tag, skip, limit)
     
-def get_tag_by_name(db: Session, name: str):
-    return db.query(models.Tag).filter(models.Tag.name == name).first()
+async def get_tag(db: AsyncSession, tag_id: int):
+    return await get_by_id(db, models.Tag, tag_id)
     
-def create_tag(db: Session, tag: schemas.TagCreate):
-    existing_tag = get_tag_by_name(db, tag.name)
+async def get_tag_by_name(db: AsyncSession, name: str):
+    result = await db.execute(
+            select(models.Tag).filter(models.Tag.name == name)
+    )
+    
+    return result.scalar_one_or_none()
+    
+async def create_tag(db: AsyncSession, tag: schemas.TagCreate):
+    existing_tag = await get_tag_by_name(db, tag.name)
     
     if existing_tag:
         return existing_tag
         
-    return create(db, models.Tag, tag)
+    return await create(db, models.Tag, tag)
     
-def update_tag(db: Session, tag_id: int, tag_update: schemas.TagUpdate):
-    return update(db, models.Tag, tag_id, tag_update)
+async def update_tag(db: AsyncSession, tag_id: int, tag_update: schemas.TagUpdate):
+    return await update(db, models.Tag, tag_id, tag_update)
     
-def delete_tag(db: Session, tag_id: int):
-    return delete(db, models.Tag, tag_id)
+async def delete_tag(db: AsyncSession, tag_id: int):
+    return await delete(db, models.Tag, tag_id)

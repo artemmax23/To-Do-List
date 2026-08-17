@@ -12,11 +12,14 @@ class TagResponse(TagBase):
     id : int
     class Config:
         from_attributes = True
-        
+
+class TagUpdate(TagBase):
+    pass        
+                        
 class TaskBase(BaseModel):
     title: str
-    text: str | None = None
-    state: bool = False
+    description: str | None = None
+    is_completed: bool = False
     tag_id: int | None = None
     
 class TaskCreate(TaskBase):
@@ -27,7 +30,7 @@ class TaskUpdate(TaskBase):
     
 class TaskResponse(TaskBase):
     id: int
-    created_date: datetime
+    created_at: datetime
     updated_at: datetime | None
     tag_id: int | None = None
     
