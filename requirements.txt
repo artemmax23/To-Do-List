@@ -1,3 +1,4 @@
+aiosqlite==0.22.1
 alembic==1.19.1
 annotated-doc==0.0.5
 annotated-types==0.8.0
@@ -16,10 +17,13 @@ Mako==1.4.1
 MarkupSafe==3.0.3
 packaging==26.3
 pluggy==1.6.0
+psycopg2==2.9.12
 pydantic==2.13.4
+pydantic-settings==2.15.0
 pydantic_core==2.46.4
 Pygments==2.20.0
 pytest==9.1.1
+pytest-asyncio==1.4.0
 python-dotenv==1.2.2
 SQLAlchemy==2.0.52
 starlette==1.6.0

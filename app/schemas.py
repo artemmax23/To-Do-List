@@ -10,7 +10,7 @@ class TagCreate(TagBase):
     
 class TagResponse(TagBase):
     id : int
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 class TagUpdate(TagBase):
@@ -40,5 +40,5 @@ class TaskResponse(TaskBase):
     updated_at: datetime | None
     tag_id: int | None = None
     
-    class Config:
+    class ConfigDict:
         from_attributes = True
