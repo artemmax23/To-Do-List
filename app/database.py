@@ -4,8 +4,17 @@ from app.config import get_db_url
 
 DATABASE_URL = get_db_url()
 
-engine = create_async_engine(DATABASE_URL)
-async_session_maker = async_sessionmaker(engine)
+engine = create_async_engine(
+        DATABASE_URL,
+        echo=True,
+        pool_pre_ping=True,        
+)
+
+async_session_maker = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+)
 
 class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
