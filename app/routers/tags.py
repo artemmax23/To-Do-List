@@ -10,13 +10,14 @@
 - Полное обновление (PUT /tags/{tag_id})
 - Удаление (DELETE /tags/{tag_id})
 
-Все эдпоинты используют асинхронные сессии SQLAlchemy и валидацию через Pydantic
+Все эндпоинты используют асинхронные сессии SQLAlchemy и валидацию через Pydantic
 Автоматическая документация доступна в Swagger (/docs) и ReDoc (/redoc)
 
 Зависимости:
         - get_db: внедряет асинхронную сессию базы данных.
         - crud: функции для работы с базой данных.
         - schemas: Pydantic-схемы для валидации запросов и ответов.
+        - get_current_user: Получение текущего пользователя.
         
 Пример:
         >>> # Создать тег
@@ -30,6 +31,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas, models
 from app.database import get_db
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/tags", tags=["tags"])
 
@@ -40,6 +42,7 @@ router = APIRouter(prefix="/tags", tags=["tags"])
 )
 async def read_tags(
         db: AsyncSession = Depends(get_db),
+        user: models.User = Depends(get_current_user),
         page: int = Query(1, ge=1, description="Номер страницы"),
         limit: int = Query(10, ge=1, le=100, description="Количество тегов на странице"),
 ):
@@ -48,6 +51,7 @@ async def read_tags(
     
     Args:
             - db: Асинхронная сессия SQLAlchemy.
+            - user: Текущий пользователь.
             - page: Номер страницы (по умолчанию 1).
             - limit: Количество на странице (по умолчанию 10).
     
@@ -75,7 +79,7 @@ async def read_tags(
     
     offset = (page - 1) * limit
   
-    return await crud.get_tags(db, offset, limit)
+    return await crud.get_tags(db, user.id, offset, limit)
     
 @router.get(
         "/{tag_id}",
@@ -84,7 +88,8 @@ async def read_tags(
 )  
 async def get_tag(
         tag_id: int,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db),
+        user: models.User = Depends(get_current_user)
 ):
     """
     Получение тега по ID.
@@ -92,6 +97,7 @@ async def get_tag(
     Args:
             - tag_id: ID тега.
             - db: Асинхронная сессия SQLAlchemy.
+            - user: Текущий пользователь.
     
     Returns:
             schemas.TagResponse: Тег с соответствующим ID.        
@@ -113,8 +119,8 @@ async def get_tag(
             ```
     """
     
-    tag = await crud.get_tag(db, tag_id)
-    
+    tag = await crud.get_tag(db, user.id, tag_id)
+   
     # Проверка существования тега
     if not tag:
         raise HTTPException(
@@ -132,6 +138,7 @@ async def get_tag(
 async def get_tags_by_search(
         tag_search: str,
         db: AsyncSession = Depends(get_db),
+        user: models.User = Depends(get_current_user),
         page: int = Query(1, ge=1, description="Номер страницы"),
         limit: int = Query(10, ge=1, le=100, description="Количество тегов на странице"),
 ):
@@ -141,6 +148,7 @@ async def get_tags_by_search(
     Args:
             - tag_search: Часть имени тега.
             - db: Асинхронная сессия SQLAlchemy.
+            - user: Текущий пользователь.
             - page: Номер страницы (по умолчанию 1).
             - limit: Количество на странице (по умолчанию 10).
     
@@ -166,7 +174,7 @@ async def get_tags_by_search(
     """
     offset = (page - 1) * limit
     
-    return await crud.get_tags_by_search(db, tag_search, offset, limit)
+    return await crud.get_tags_by_search(db, user.id, tag_search, offset, limit)
     
 @router.get(
         "/name/{tag_name}",
@@ -175,7 +183,8 @@ async def get_tags_by_search(
 )
 async def get_tag_by_name(
         tag_name: str,
-        db: AsyncSession=Depends(get_db)
+        db: AsyncSession=Depends(get_db),
+        user: models.User = Depends(get_current_user)
 ):
     """
     Получить тег по имени (полное совпадение).
@@ -183,13 +192,14 @@ async def get_tag_by_name(
     Args:
             - tag_name: Имя тега.
             - db: Асинхронная сессия SQLAlchemy.
+            - user: Текущий пользователь.
     
     Returns:
             schemas.TagResponse: Тегов с  именем.        
      
      Raises:
             HTTPException: 500, при внутренней ошибке сервера.
-            HTTPException: 404, если тега с указанным ID не существует в базе данных.                   
+            HTTPException: 404, если тега с указанным именем не существует в базе данных.                   
                                                                           
     Example:
             ```http
@@ -203,13 +213,13 @@ async def get_tag_by_name(
             }
             ```
     """
-    tag = await crud.get_tag_by_name(db, tag_name)
+    tag = await crud.get_tag_by_name(db, user.id, tag_name)
     
     # Проверка существования тега
     if not tag:
         raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tag with id {tag_id} not found"
+                detail=f"Tag with name '{tag_name}'' not found"
         )
     
     return tag
@@ -223,6 +233,7 @@ async def get_tag_by_name(
 async def create_tag(
         tag: schemas.TagCreate,
         db: AsyncSession=Depends(get_db),
+        user: models.User = Depends(get_current_user)
 ):
     """
     Создание тега.
@@ -230,6 +241,7 @@ async def create_tag(
     Args:
             - tag: Pydantic-схема с данными для создания тега (name).
             - db: Асинхронная сессия SQLAlchemy.
+            - user: Текущий пользователь.
     
     Returns:
             schemas.TagResponse: Созданный тег с полем id.        
@@ -254,7 +266,7 @@ async def create_tag(
             }
             ```
     """
-    return await crud.create_tag(db, tag)
+    return await crud.create_tag(db, user.id, tag)
     
 @router.put(
         "/{tag_id}",
@@ -264,7 +276,8 @@ async def create_tag(
 async def update_tag(
         tag_id: int,
         tag_data: schemas.TagUpdate,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db),
+        user: models.User = Depends(get_current_user)
 ):
     """
     Обновление тега.
@@ -273,6 +286,7 @@ async def update_tag(
             - tag_id: ID тега для изменения.
             - tag_data: Pydantic-схема с данными для обновления тега (name).
             - db: Асинхронная сессия SQLAlchemy.
+            - user: Текущий пользователь.
     
     Returns:
             schemas.TagResponse: Обновленный тег с полем id.        
@@ -299,7 +313,7 @@ async def update_tag(
             ```
     """
     
-    existing_tag = await crud.update_tag(db, tag_id, tag_data)
+    existing_tag = await crud.update_tag(db, user.id, tag_id, tag_data)
     
     # Проверка тега на существование
     if not existing_tag:
@@ -317,14 +331,16 @@ async def update_tag(
 )
 async def delete_tag(
         tag_id: int,
-        db: AsyncSession=Depends(get_db)
+        db: AsyncSession=Depends(get_db),
+        user: models.User = Depends(get_current_user)
 ):
     """
     Удаление тега.
     
     Args:
             - tag_id: ID тега для изменения.
-            - db: Асинхронная сессия SQLAlchemy.       
+            - db: Асинхронная сессия SQLAlchemy.  
+            - user: Текущий пользователь.     
      
      Returns:
              None: При успешном выполнении возвращается статус 204 No Content.
@@ -342,7 +358,7 @@ async def delete_tag(
             HTTP/1.1 204 No Content
             ```
     """
-    deleted = await crud.delete_tag(db, tag_id) 
+    deleted = await crud.delete_tag(db, user.id, tag_id) 
     
     if not deleted:
         raise HTTPException(

@@ -20,7 +20,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 
 from app.database import Base, get_db
 from app.main import app
-from app.config import get_db_url
+
+import uuid
+from sqlalchemy import update
+from app.models import User
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"    # Адрес сервера базы данных для тестирования
 
@@ -79,3 +82,57 @@ async def client() -> AsyncClient:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+        
+@pytest.fixture(scope="function")
+async def create_test_user(client: AsyncClient):
+    """Создаёт тестового пользователя и вовзращает его email и пароль"""
+    email = "test_user@example.com"
+    password = "qwerty123"
+    
+    response = await client.post(
+            "/auth/register",
+            json={
+                    "email": email,
+                    "password": password 
+            }
+    )
+    
+    if response.status_code == 400:
+        # Генерируем новый email
+        email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+        response = await client.post(
+                "/auth/register",
+                json={
+                        "email": email,
+                        "password": password 
+                }
+        )
+        
+    # Активируем пользователя вручную (для тестов)
+    async with TestingSessionLocal() as session:
+        await session.execute(
+            update(User).where(User.email == email).values(is_active=True)
+        )
+        await session.commit()
+    
+    return {"email": email, "password": password}
+    
+@pytest.fixture(scope="function")
+async def auth_headers(client: AsyncClient, create_test_user):
+    """
+    Фикстура для получения заголовков с токеном авторизованного пользователя.
+    """
+    user = create_test_user
+    
+    response = await client.post(
+            "/auth/login",
+            data={
+                    "username": user["email"],
+                    "password": user["password"]
+            }
+    )
+    
+    assert response.status_code == 200, "Failed to login test user"
+    access_token = response.json()["access_token"]        
+    
+    return {"Authorization": f"Bearer {access_token}"}

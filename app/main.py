@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db
-from app.routers import tasks, tags
+from app.routers import tasks, tags, auth
 
 # --- 1. Создание экземпряла приложения ---
 
@@ -61,6 +61,7 @@ app.add_middleware(
 
 app.include_router(tasks.router)    # Роутер для задач
 app.include_router(tags.router)      # Роутер для тегов
+app.include_router(auth.router)      # Роутер для пользователей
 
 # --- 4. Корневые эндпоинты ---
 
