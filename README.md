@@ -1,6 +1,9 @@
 # Task Manager API
 
 [![CI](https://github.com/artemmax23/To-Do-List/actions/workflows/ci.yml/badge.svg)](https://github.com/artemmax23/To-Do-List/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 
 REST API для управления задачами с тегами, пользователями и JWT-аутентификацией.
 
