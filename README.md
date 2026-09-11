@@ -40,6 +40,60 @@ REST API для управления задачами с тегами, поль�
 
 ---
 
+
+---
+
+## ✅ Что реализовано
+
+### Аутентификация и безопасность
+- [x] Регистрация пользователей (email + пароль)
+- [x] JWT-аутентификация (access token)
+- [x] Хеширование паролей (bcrypt)
+- [x] Защита эндпоинтов через `get_current_user`
+- [x] Изоляция данных (каждый пользователь видит только свои задачи и теги)
+
+### Задачи
+- [x] CRUD-операции (создание, чтение, обновление, удаление)
+- [x] Пагинация (`page`, `limit`)
+- [x] Фильтрация по статусу (`is_completed`)
+- [x] Фильтрация по тегу (`tag_id`)
+- [x] Поиск по названию и описанию (`search`)
+- [x] Частичное обновление (PATCH)
+- [x] Полное обновление (PUT)
+
+### Теги
+- [x] CRUD-операции
+- [x] Поиск по точному имени
+- [x] Поиск по части имени
+- [x] Пагинация
+- [x] Каскадное обнуление `tag_id` при удалении тега
+
+### Архитектура
+- [x] Асинхронный FastAPI + SQLAlchemy 2.0
+- [x] PostgreSQL 16
+- [x] Alembic-миграции
+- [x] Pydantic v2 для валидации
+- [x] Дженерики CRUD (base.py)
+- [x] Разделение на слои (routers, crud, schemas, models)
+
+### Инфраструктура
+- [x] Docker + Docker Compose
+- [x] CI/CD (GitHub Actions)
+- [x] Сборка Docker-образа
+- [x] Публикация в GitHub Container Registry (GHCR)
+- [x] Автоматический запуск тестов при пуше
+
+### Тестирование
+- [x] Интеграционные тесты (pytest + httpx)
+- [x] Покрытие: аутентификация, задачи, теги
+- [x] Проверка ошибок (401, 404, 400)
+- [x] Тестовая БД (SQLite + aiosqlite)
+
+### Документация
+- [x] Swagger (`/docs`) и ReDoc (`/redoc`)
+- [x] Docstrings для всех модулей и функций
+- [x] README с инструкциями и примерами
+
 ## Возможности API
 
 ### Аутентификация (`/auth`)
@@ -68,6 +122,12 @@ REST API для управления задачами с тегами, поль�
 - **Изоляция данных** — каждый пользователь видит только свои задачи и теги
 - **Пагинация, фильтрация, поиск** — для задач
 - **Валидация** — через Pydantic
+
+---
+
+## 🎥 Демонстрация
+
+[Смотреть скринкаст работы API](https://drive.google.com/file/d/1PtjDm8iyw_nXZvUzjgjRHHOQ6DtDCCnW/view?usp=drivesdk)
 
 ---
 
@@ -113,7 +173,7 @@ REST API для управления задачами с тегами, поль�
 
 ---
 
-Запуск через Docker
+##Запуск через Docker
 
 Убедись, что у тебя установлены Docker и Docker Compose.
 
@@ -131,15 +191,53 @@ REST API для управления задачами с тегами, поль�
 
 ---
 
-Тестирование
+## 🐳 Запуск через Docker Compose
 
-Запуск тестов:
+Самый простой способ запустить проект — использовать Docker Compose.
+
+### Требования
+- Docker
+- Docker Compose
+
+### Запуск
+
+```bash
+# 1. Клонируй репозиторий
+git clone https://github.com/artemmax23/To-Do-List.git
+cd To-Do-List
+
+# 2. Создай файл .env (пример в .env.example)
+cp .env.example .env
+
+# 3. Запусти контейнеры
+docker-compose up --build
+
+# 4. Примени миграции (в новом терминале)
+docker-compose exec app alembic upgrade head
+```
+
+### Проверка
+
+· API: http://localhost:8000
+· Swagger: http://localhost:8000/docs
+
+### Остановка
+
+```bash
+docker-compose down
+```
+
+---
+
+## Тестирование
+
+### Запуск тестов:
 
 ```bash
 pytest -v
 ```
 
-Покрытие тестами:
+###Покрытие тестами:
 
 Аутентификация:
 
@@ -174,9 +272,9 @@ pytest -v
 
 ---
 
-Примеры запросов
+## Примеры запросов
 
-Регистрация пользователя
+### Регистрация пользователя
 
 ```http
 POST /auth/register
@@ -188,7 +286,7 @@ Content-Type: application/json
 }
 ```
 
-Логин (получение токена)
+### Логин (получение токена)
 
 ```http
 POST /auth/login
@@ -197,7 +295,7 @@ Content-Type: application/x-www-form-urlencoded
 username=test@example.com&password=qwerty123
 ```
 
-Создать задачу (с токеном)
+### Создать задачу (с токеном)
 
 ```http
 POST /tasks/
@@ -211,14 +309,14 @@ Content-Type: application/json
 }
 ```
 
-Получить задачи с пагинацией и фильтром
+### Получить задачи с пагинацией и фильтром
 
 ```http
 GET /tasks/?page=1&limit=10&is_completed=false&search=купить
 Authorization: Bearer <access_token>
 ```
 
-Обновить задачу
+### Обновить задачу
 
 ```http
 PATCH /tasks/1
@@ -230,7 +328,7 @@ Content-Type: application/json
 }
 ```
 
-Создать тег
+### Создать тег
 
 ```http
 POST /tags/
@@ -244,70 +342,113 @@ Content-Type: application/json
 
 ---
 
-Структура проекта
+## Структура проекта
 
 ```
-task_manager/
+To-Do-List/
 ├── app/
-│   ├── __init__.py
-│   ├── main.py              # Точка входа
-│   ├── config.py            # Настройки (pydantic-settings)
-│   ├── database.py          # Подключение к БД
-│   ├── models.py            # SQLAlchemy модели (User, Task, Tag)
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── user.py          # Pydantic схемы пользователя
-│   │   ├── task.py          # Pydantic схемы задачи
-│   │   └── tag.py           # Pydantic схемы тега
-│   ├── crud/
-│   │   ├── __init__.py
-│   │   ├── base.py          # Дженерики CRUD
-│   │   ├── user.py          # CRUD пользователей
-│   │   ├── task.py          # CRUD задач
-│   │   └── tag.py           # CRUD тегов
-│   ├── routers/
-│   │   ├── __init__.py
-│   │   ├── auth.py          # Эндпоинты аутентификации
-│   │   ├── tasks.py         # Эндпоинты задач
-│   │   └── tags.py          # Эндпоинты тегов
-│   ├── dependencies/
-│   │   ├── __init__.py
-│   │   └── auth.py          # get_current_user
-│   └── core/
-│       ├── __init__.py
-│       └── security.py      # JWT (создание/декодирование)
-├── migrations/              # Alembic миграции
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py          # Фикстуры
-│   ├── test_auth.py         # Тесты аутентификации
-│   ├── test_tasks.py        # Тесты задач
-│   └── test_tags.py         # Тесты тегов
-├── .env.example             # Пример переменных окружения
-├── .gitignore               # Игнорируемые файлы
-├── Dockerfile               # Docker образ
-├── docker-compose.yml       # Docker Compose
-├── pytest.ini               # Настройки тестов
-├── requirements.txt         # Зависимости
-└── README.md                # Описание проекта
+│   ├── init.py
+│   ├── main.py                  # Точка входа FastAPI
+│   ├── config.py                # Настройки (pydantic-settings)
+│   ├── database.py              # Подключение к БД (async SQLAlchemy)
+│   ├── models.py                # SQLAlchemy модели (User, Task, Tag)
+│   │
+│   ├── schemas/                 # Pydantic-схемы
+│   │   ├── init.py
+│   │   ├── user.py              # Схемы пользователя (UserCreate, UserResponse, Token)
+│   │   ├── task.py              # Схемы задачи (TaskCreate, TaskUpdate, TaskResponse)
+│   │   └── tag.py               # Схемы тега (TagCreate, TagUpdate, TagResponse)
+│   │
+│   ├── crud/                    # CRUD-операции
+│   │   ├── init.py
+│   │   ├── base.py              # Дженерики (get_all, get_by_id, create, update, delete)
+│   │   ├── user.py              # CRUD пользователей + хеширование паролей
+│   │   ├── task.py              # CRUD задач + фильтрация и поиск
+│   │   └── tag.py               # CRUD тегов + поиск по имени
+│   │
+│   ├── routers/                 # Эндпоинты FastAPI
+│   │   ├── init.py
+│   │   ├── auth.py              # Регистрация, логин
+│   │   ├── tasks.py             # CRUD задач
+│   │   └── tags.py              # CRUD тегов
+│   │
+│   ├── dependencies/            # Зависимости FastAPI
+│   │   ├── init.py
+│   │   └── auth.py              # get_current_user (JWT)
+│   │
+│   └── core/                    # Ядро приложения
+│       ├── init.py
+│       └── security.py          # JWT: создание и декодирование токенов
+│
+├── migrations/                  # Alembic-миграции
+│   ├── versions/                # Файлы миграций
+│   ├── env.py
+│   └── script.py.mako
+│
+├── tests/                       # Тесты (pytest)
+│   ├── init.py
+│   ├── conftest.py              # Фикстуры (client, auth_headers, create_test_user)
+│   ├── test_auth.py             # Тесты аутентификации
+│   ├── test_tasks.py            # Тесты задач
+│   └── test_tags.py             # Тесты тегов
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml               # CI/CD: тесты + сборка + публикация в GHCR
+│
+├── .env.example                 # Пример переменных окружения
+├── .gitignore                   # Игнорируемые файлы
+├── Dockerfile                   # Docker-образ приложения
+├── docker-compose.yml           # Docker Compose (app + PostgreSQL)
+├── pytest.ini                   # Настройки pytest
+├── requirements.txt             # Зависимости
+└── README.md                    # Описание проекта
 ```
 
 ---
 
-Планы по развитию
+## 🗺️ Планы по развитию
 
-☑ Добавить аутентификацию (JWT)
-☑ Поддержка пользователей и личных задач
-☑ Написать интеграционные тесты для всех сущностей
-☑ CI/CD через GitHub Actions
-☐ Экспорт задач в CSV
-☐ Уведомления о дедлайнах
-☐ Внедрение Redis для кеширования
-☐ Нагрузочное тестирование (Locust)
+### ✅ Реализовано
+- [x] REST API для задач и тегов
+- [x] JWT-аутентификация (регистрация, логин)
+- [x] Изоляция данных между пользователями
+- [x] Пагинация, фильтрация, поиск задач
+- [x] Поиск тегов по имени
+- [x] Alembic-миграции
+- [x] Docker + Docker Compose
+- [x] CI/CD (GitHub Actions)
+- [x] Сборка и публикация Docker-образа в GHCR
+- [x] Интеграционные тесты (pytest + httpx)
+- [x] Swagger-документация
+- [x] Полные docstrings
+
+### 🚧 Ближайшие планы
+- [ ] Экспорт задач в CSV
+- [ ] Сортировка задач (`sort`, `order`)
+- [ ] Дедлайны для задач
+- [ ] Мягкое удаление (`is_deleted`)
+- [ ] Роли пользователей (admin / user)
+- [ ] Покрытие тестами 80%+ (`pytest --cov`)
+- [ ] Линтеры в CI (flake8, black, isort)
+- [ ] Проверка типов (mypy)
+- [ ] Нагрузочное тестирование (Locust / k6)
+- [ ] Замеры производительности и оптимизация запросов
+
+### 🔮 Долгосрочные планы
+- [ ] Redis для кеширования
+- [ ] Celery для фоновых задач
+- [ ] WebSocket для real-time уведомлений
+- [ ] Prometheus + Grafana для метрик
+- [ ] Sentry для отслеживания ошибок
+- [ ] Деплой на Render / Railway
+- [ ] Kubernetes (minikube)
+- [ ] Nginx как reverse proxy
+- [ ] GraphQL как альтернатива REST
 
 ---
 
-Автор
+## Автор
 
 Артём Золотарев
 GitHub: @artemmax23
