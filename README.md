@@ -1,5 +1,7 @@
 # Task Manager API
 
+[![CI](https://github.com/artemmax23/To-Do-List/actions/workflows/ci.yml/badge.svg)](https://github.com/artemmax23/To-Do-List/actions/workflows/ci.yml)
+
 REST API для управления задачами с тегами, пользователями и JWT-аутентификацией.
 
 Проект написан на **FastAPI** с использованием асинхронной **PostgreSQL** через **SQLAlchemy 2.0**.
